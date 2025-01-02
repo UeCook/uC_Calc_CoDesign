@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\uC_Calc_DBoard.obj" 
+TO ".\Objects\uC_Calc_DBoard" 
+PRINT(".\Listings\uC_Calc_DBoard.m51")

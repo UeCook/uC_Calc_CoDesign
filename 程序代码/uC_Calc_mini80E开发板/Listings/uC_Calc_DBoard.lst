@@ -1,0 +1,680 @@
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE UC_CALC_DBOARD
+OBJECT MODULE PLACED IN .\Objects\uC_Calc_DBoard.obj
+COMPILER INVOKED BY: C:\Program Files\Keil_C51\C51\BIN\C51.EXE uC_Calc_DBoard.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXT
+                    -END PRINT(.\Listings\uC_Calc_DBoard.lst) TABS(2) OBJECT(.\Objects\uC_Calc_DBoard.obj)
+
+line level    source
+
+   1          #include <reg51.H>
+   2          #include<intrins.h>
+   3          #include<stdio.h>
+   4          #include<string.h>
+   5          #include<math.h>
+   6          
+   7          sbit RS = P2^4;
+   8          sbit RW = P2^5;
+   9          sbit E = P2^6;
+  10          
+  11          #define Data P0
+  12          
+  13          float num1;
+  14          float num2;
+  15          char yun_flag = ' ';
+  16          char key_last;
+  17          char sqrt_flag;
+  18          unsigned long pos_flag = 1;
+  19          char neg_flag;
+  20          char data c_num1[15] = " ";
+  21          char data c_num2[15] = " ";
+  22          char error;
+  23          char len;
+  24          
+  25          void DelayUs(unsigned char us)
+  26          {
+  27   1          unsigned char uscnt;
+  28   1          uscnt = us >> 1;
+  29   1          while (--uscnt)
+  30   1          {
+  31   2          }
+  32   1      }
+  33          
+  34          void DelayMs(unsigned char ms)
+  35          {
+  36   1          while (--ms)
+  37   1          {
+  38   2              DelayUs(250);
+  39   2              DelayUs(250);
+  40   2              DelayUs(250);
+  41   2              DelayUs(250);
+  42   2          }
+  43   1      }
+  44          
+  45          void WriteCommand(unsigned char c)
+  46          {
+  47   1          DelayMs(5);
+  48   1          E = 0;
+  49   1          RS = 0;
+  50   1          RW = 0;
+  51   1          _nop_();
+  52   1          E = 1;
+  53   1          Data = c;
+  54   1          E = 0;
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 2   
+
+  55   1      }
+  56          
+  57          void WriteData(unsigned char c)
+  58          {
+  59   1          DelayMs(5);
+  60   1          E = 0;
+  61   1          RS = 1;
+  62   1          RW = 0;
+  63   1          _nop_();
+  64   1          E = 1;
+  65   1          Data = c;
+  66   1          E = 0;
+  67   1          RS = 0;
+  68   1      }
+  69          
+  70          void ShowChar(unsigned char pos, unsigned char c)
+  71          {
+  72   1          unsigned char p;
+  73   1          if (pos >= 0x10)
+  74   1          {
+  75   2              p = pos + 0xb0;
+  76   2          }
+  77   1          else
+  78   1          {
+  79   2              p = pos + 0x80;
+  80   2          }
+  81   1          WriteCommand(p);
+  82   1          WriteData(c);
+  83   1      }
+  84          
+  85          void ShowString(unsigned char line, char *ptr)
+  86          {
+  87   1          unsigned char l, i;
+  88   1          l = line << 4;
+  89   1          for (i = 0; *(ptr + i) != '\0'; i++)
+  90   1          {
+  91   2              ShowChar(l++, *(ptr + i));
+  92   2          }
+  93   1      }
+  94          
+  95          void InitLcd(void)
+  96          {
+  97   1          DelayMs(15);
+  98   1          WriteCommand(0x38);
+  99   1          WriteCommand(0x38);
+ 100   1          WriteCommand(0x38);
+ 101   1          WriteCommand(0x06);
+ 102   1          WriteCommand(0x0c);
+ 103   1          WriteCommand(0x01);
+ 104   1      }
+ 105          
+ 106          char scan(void)
+ 107          {
+ 108   1          char h_data, l_data, i, key_num;
+ 109   1          P2 = P2 & 0XE0;
+ 110   1          P1 = P1 | 0X0F;
+ 111   1          while ((P1 | 0xf0) == 0xff)
+ 112   1          {
+ 113   2              while ((P1 | 0xf0) == 0xff)
+ 114   2              {
+ 115   3              }
+ 116   2              DelayMs(10);
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 3   
+
+ 117   2          }
+ 118   1          l_data = ~(P1 | 0xf0);
+ 119   1          P2 = P2 | 0X1F;
+ 120   1          P1 = P1 & 0XF0;
+ 121   1          h_data = ~(P2 | 0xe0);
+ 122   1          for (i = 0; i <= 4; i++)
+ 123   1          {
+ 124   2              if (h_data == 1)
+ 125   2              {
+ 126   3                  break;
+ 127   3              }
+ 128   2              h_data = h_data >> 1;
+ 129   2          }
+ 130   1          h_data = i;
+ 131   1          for (i = 1; i <= 4; i++)
+ 132   1          {
+ 133   2              if (l_data == 1)
+ 134   2              {
+ 135   3                  break;
+ 136   3              }
+ 137   2              l_data = l_data >> 1;
+ 138   2          }
+ 139   1          l_data = i;
+ 140   1          key_num = h_data * 4 + l_data;
+ 141   1      
+ 142   1          P2 = P2 & 0XE0;
+ 143   1          P1 = P1 | 0X0F;
+ 144   1          while ((P1 | 0xf0) != 0xff)
+ 145   1          {
+ 146   2              while ((P1 | 0xf0) != 0xff)
+ 147   2              {
+ 148   3              }
+ 149   2              DelayMs(10);
+ 150   2          }
+ 151   1          return key_num;
+ 152   1      }
+ 153          
+ 154          void float_to_char(float a, char *p)
+ 155          {
+ 156   1          char i, flag, length;
+ 157   1          flag = 0;
+ 158   1          sprintf(p, "%f", a);
+ 159   1          length = strlen(p);
+ 160   1          for (i = 0; i < length; i++)
+ 161   1          {
+ 162   2              if (*(p + i) == '.')
+ 163   2              {
+ 164   3                  flag = 1;
+ 165   3              }
+ 166   2          }
+ 167   1          if (flag == 1)
+ 168   1          {
+ 169   2              for (i = length - 1; i >= 0; i--)
+ 170   2              {
+ 171   3                  if (*(p + i) == '.')
+ 172   3                  {
+ 173   4                      *(p + i) = '\0';
+ 174   4                      break;
+ 175   4                  }
+ 176   3                  if (*(p + i) != '0')
+ 177   3                  {
+ 178   4                      *(p + i + 1) = '\0';
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 4   
+
+ 179   4                      break;
+ 180   4                  }
+ 181   3              }
+ 182   2          }
+ 183   1      }
+ 184          
+ 185          void refresh(void)
+ 186          {
+ 187   1          char length, i, j;
+ 188   1          char dot;
+ 189   1          dot = 0;
+ 190   1      
+ 191   1          float_to_char(num2, c_num2);
+ 192   1          length = strlen(c_num2);
+ 193   1          for (i = 0, j = 0; i < length; i++)
+ 194   1          {
+ 195   2              if (c_num2[i] == '.')
+ 196   2              {
+ 197   3                  dot = 1;
+ 198   3              }
+ 199   2              if (dot == 1)
+ 200   2              {
+ 201   3                  j++;
+ 202   3              }
+ 203   2          }
+ 204   1          if (j < len)
+ 205   1          {
+ 206   2              if (dot == 1)
+ 207   2              {
+ 208   3                  for (i = length; i < (length + len - j); i++)
+ 209   3                  {
+ 210   4                      c_num2[i] = '0';
+ 211   4                  }
+ 212   3                  c_num2[i] = '\0';
+ 213   3              }
+ 214   2              else
+ 215   2              {
+ 216   3                  c_num2[length] = '.';
+ 217   3                  if (len - j > 1)
+ 218   3                  {
+ 219   4                      for (i = length + 1; i < (length + len - j); i++)
+ 220   4                      {
+ 221   5                          c_num2[i] = '0';
+ 222   5                      }
+ 223   4                  }
+ 224   3                  c_num2[length + len - j] = '\0';
+ 225   3              }
+ 226   2          }
+ 227   1      
+ 228   1          if (neg_flag == 1)
+ 229   1          {
+ 230   2              length = strlen(c_num2);
+ 231   2              for (i = length - 1; i >= 0; i--)
+ 232   2              {
+ 233   3                  c_num2[i + 1] = c_num2[i];
+ 234   3              }
+ 235   2              c_num2[length + 1] = '\0';
+ 236   2              c_num2[0] = '-';
+ 237   2          }
+ 238   1      
+ 239   1          if (sqrt_flag == 1)
+ 240   1          {
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 5   
+
+ 241   2              length = strlen(c_num2);
+ 242   2              for (i = length - 1; i >= 0; i--)
+ 243   2              {
+ 244   3                  c_num2[i + 1] = c_num2[i];
+ 245   3              }
+ 246   2              c_num2[length + 1] = '\0';
+ 247   2              c_num2[0] = 0xe8;
+ 248   2          }
+ 249   1      
+ 250   1          if (error == 0)
+ 251   1          {
+ 252   2              float_to_char(num1, c_num1);
+ 253   2              WriteCommand(0x01);
+ 254   2              ShowString(0, c_num1);
+ 255   2              ShowString(1, c_num2);
+ 256   2              ShowChar(15, yun_flag);
+ 257   2          }
+ 258   1          else
+ 259   1          {
+ 260   2              WriteCommand(0x01);
+ 261   2              ShowString(0, "error!!!");
+ 262   2          }
+ 263   1      }
+ 264          
+ 265          void operation1(char keynum)
+ 266          {
+ 267   1          if (key_last == 1)
+ 268   1          {
+ 269   2              if (neg_flag == 1)
+ 270   2              {
+ 271   3                  num2 = -num2;
+ 272   3              }
+ 273   2              if (sqrt_flag == 1)
+ 274   2              {
+ 275   3                  if (num2 >= 0)
+ 276   3                  {
+ 277   4                      num2 = sqrt(num2);
+ 278   4                  }
+ 279   3                  else
+ 280   3                  {
+ 281   4                      error = 1;
+ 282   4                  }
+ 283   3              }
+ 284   2              if (yun_flag == '+')
+ 285   2              {
+ 286   3                  num1 = num1 + num2;
+ 287   3              }
+ 288   2              if (yun_flag == '-')
+ 289   2              {
+ 290   3                  num1 = num1 - num2;
+ 291   3              }
+ 292   2              if (yun_flag == '*')
+ 293   2              {
+ 294   3                  num1 = num1 * num2;
+ 295   3              }
+ 296   2              if (yun_flag == '/')
+ 297   2              {
+ 298   3                  if (num2 != 0)
+ 299   3                  {
+ 300   4                      num1 = num1 / num2;
+ 301   4                  }
+ 302   3                  else
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 6   
+
+ 303   3                  {
+ 304   4                      error = 1;
+ 305   4                  }
+ 306   3              }
+ 307   2              if (yun_flag == ' ' && num2 != 0)
+ 308   2              {
+ 309   3                  num1 = num2;
+ 310   3              }
+ 311   2              num2 = 0;
+ 312   2              sqrt_flag = 0;
+ 313   2              neg_flag = 0;
+ 314   2              pos_flag = 1;
+ 315   2          }
+ 316   1          if (keynum == 4)
+ 317   1          {
+ 318   2              yun_flag = '+';
+ 319   2          }
+ 320   1          if (keynum == 8)
+ 321   1          {
+ 322   2              yun_flag = '-';
+ 323   2          }
+ 324   1          if (keynum == 12)
+ 325   1          {
+ 326   2              yun_flag = '*';
+ 327   2          }
+ 328   1          if (keynum == 16)
+ 329   1          {
+ 330   2              yun_flag = '/';
+ 331   2          }
+ 332   1          len = 0;
+ 333   1          key_last = 0;
+ 334   1          refresh();
+ 335   1      }
+ 336          
+ 337          void operation2(char keynum)
+ 338          {
+ 339   1          float Data1;
+ 340   1      
+ 341   1          if (keynum == 1)
+ 342   1          {
+ 343   2              Data1 = 7;
+ 344   2          }
+ 345   1          if (keynum == 2)
+ 346   1          {
+ 347   2              Data1 = 8;
+ 348   2          }
+ 349   1          if (keynum == 3)
+ 350   1          {
+ 351   2              Data1 = 9;
+ 352   2          }
+ 353   1          if (keynum == 5)
+ 354   1          {
+ 355   2              Data1 = 4;
+ 356   2          }
+ 357   1          if (keynum == 6)
+ 358   1          {
+ 359   2              Data1 = 5;
+ 360   2          }
+ 361   1          if (keynum == 7)
+ 362   1          {
+ 363   2              Data1 = 6;
+ 364   2          }
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 7   
+
+ 365   1          if (keynum == 9)
+ 366   1          {
+ 367   2              Data1 = 1;
+ 368   2          }
+ 369   1          if (keynum == 10)
+ 370   1          {
+ 371   2              Data1 = 2;
+ 372   2          }
+ 373   1          if (keynum == 11)
+ 374   1          {
+ 375   2              Data1 = 3;
+ 376   2          }
+ 377   1          if (keynum == 13)
+ 378   1          {
+ 379   2              Data1 = 0;
+ 380   2          }
+ 381   1          if (pos_flag == 1)
+ 382   1          {
+ 383   2              num2 = num2 * 10 + Data1;
+ 384   2          }
+ 385   1          else
+ 386   1          {
+ 387   2              num2 = num2 + (Data1 / pos_flag);
+ 388   2              pos_flag = pos_flag * 10;
+ 389   2              len++;
+ 390   2          }
+ 391   1          key_last = 1;
+ 392   1          refresh();
+ 393   1      }
+ 394          
+ 395          void operation3(void)
+ 396          {
+ 397   1          if (pos_flag == 1)
+ 398   1          {
+ 399   2              pos_flag = pos_flag * 10;
+ 400   2              len++;
+ 401   2          }
+ 402   1          key_last = 1;
+ 403   1          refresh();
+ 404   1      }
+ 405          
+ 406          void operation4(void)
+ 407          {
+ 408   1          if (neg_flag == 1)
+ 409   1          {
+ 410   2              num2 = -num2;
+ 411   2          }
+ 412   1          if (sqrt_flag == 1)
+ 413   1          {
+ 414   2              if (num2 >= 0)
+ 415   2              {
+ 416   3                  num2 = sqrt(num2);
+ 417   3              }
+ 418   2              else
+ 419   2              {
+ 420   3                  error = 1;
+ 421   3              }
+ 422   2          }
+ 423   1          if (yun_flag == '+')
+ 424   1          {
+ 425   2              num1 = num1 + num2;
+ 426   2          }
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 8   
+
+ 427   1          if (yun_flag == '-')
+ 428   1          {
+ 429   2              num1 = num1 - num2;
+ 430   2          }
+ 431   1          if (yun_flag == '*')
+ 432   1          {
+ 433   2              num1 = num1 * num2;
+ 434   2          }
+ 435   1          if (yun_flag == '/')
+ 436   1          {
+ 437   2              if (num2 != 0)
+ 438   2              {
+ 439   3                  num1 = num1 / num2;
+ 440   3              }
+ 441   2              else
+ 442   2              {
+ 443   3                  error = 1;
+ 444   3              }
+ 445   2          }
+ 446   1          if (yun_flag == ' ' && num2 != 0)
+ 447   1          {
+ 448   2              num1 = num2;
+ 449   2          }
+ 450   1          num2 = 0;
+ 451   1          sqrt_flag = 0;
+ 452   1          neg_flag = 0;
+ 453   1          pos_flag = 1;
+ 454   1          yun_flag = ' ';
+ 455   1          len = 0;
+ 456   1          key_last = 0;
+ 457   1          refresh();
+ 458   1      }
+ 459          
+ 460          void operation5(void)
+ 461          {
+ 462   1          num1 = 0;
+ 463   1          num2 = 0;
+ 464   1          sqrt_flag = 0;
+ 465   1          neg_flag = 0;
+ 466   1          pos_flag = 1;
+ 467   1          yun_flag = ' ';
+ 468   1          error = 0;
+ 469   1          len = 0;
+ 470   1          key_last = 0;
+ 471   1          refresh();
+ 472   1      }
+ 473          
+ 474          void operation6(void)
+ 475          {
+ 476   1          char i, length;
+ 477   1          if (num2 == 0)
+ 478   1          {
+ 479   2              sqrt_flag = 0;
+ 480   2              neg_flag = 0;
+ 481   2              pos_flag = 1;
+ 482   2              len = 0;
+ 483   2              key_last = 0;
+ 484   2              refresh();
+ 485   2              return;
+ 486   2          }
+ 487   1          sprintf(c_num2, "%f", num2);
+ 488   1          length = strlen(c_num2);
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 9   
+
+ 489   1          for (i = length - 1; i >= 0; i--)
+ 490   1          {
+ 491   2              if (c_num2[i] != '0' && c_num2[i] != '.')
+ 492   2              {
+ 493   3                  break;
+ 494   3              }
+ 495   2          }
+ 496   1          if (pos_flag == 1)
+ 497   1          {
+ 498   2              num2 -= (c_num2[i] - '0');
+ 499   2              num2 = num2 / 10;
+ 500   2          }
+ 501   1          else
+ 502   1          {
+ 503   2              pos_flag /= 10;
+ 504   2              num2 *= pos_flag;
+ 505   2              num2 -= (c_num2[i] - '0');
+ 506   2              num2 /= pos_flag;
+ 507   2              len--;
+ 508   2          }
+ 509   1          refresh();
+ 510   1      }
+ 511          
+ 512          void operation7(void)
+ 513          {
+ 514   1          if (neg_flag == 0)
+ 515   1          {
+ 516   2              neg_flag = 1;
+ 517   2          }
+ 518   1          else
+ 519   1          {
+ 520   2              neg_flag = 0;
+ 521   2          }
+ 522   1          key_last = 1;
+ 523   1          refresh();
+ 524   1      }
+ 525          
+ 526          void operation8(void)
+ 527          {
+ 528   1          if (sqrt_flag == 0)
+ 529   1          {
+ 530   2              sqrt_flag = 1;
+ 531   2          }
+ 532   1          else
+ 533   1          {
+ 534   2              sqrt_flag = 0;
+ 535   2          }
+ 536   1          key_last = 1;
+ 537   1          refresh();
+ 538   1      }
+ 539          
+ 540          void key(char keynum)
+ 541          {
+ 542   1          switch (keynum)
+ 543   1          {
+ 544   2              case 4 :
+ 545   2              case 8 :
+ 546   2              case 12:
+ 547   2              case 16:
+ 548   2              {
+ 549   3                  if (error == 0)
+ 550   3                  {
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 10  
+
+ 551   4                      operation1(keynum);
+ 552   4                  }
+ 553   3                  break;
+ 554   3              }
+ 555   2      
+ 556   2              case 1  :
+ 557   2              case 2  :
+ 558   2              case 3  :
+ 559   2              case 5  :
+ 560   2              case 6  :
+ 561   2              case 7  :
+ 562   2              case 9  :
+ 563   2              case 10 :
+ 564   2              case 11 :
+ 565   2              case 13 :
+ 566   2              {
+ 567   3                  if (error == 0)
+ 568   3                  {
+ 569   4                      operation2(keynum);
+ 570   4                  }
+ 571   3                  break;
+ 572   3              }
+ 573   2      
+ 574   2              case 14 :
+ 575   2              {
+ 576   3                  if (error == 0)
+ 577   3                  {
+ 578   4                      operation3();
+ 579   4                  }
+ 580   3                  break;
+ 581   3              }
+ 582   2      
+ 583   2              case 15 :
+ 584   2              {
+ 585   3                  if (error == 0)
+ 586   3                  {
+ 587   4                      operation4();
+ 588   4                  }
+ 589   3                  break;
+ 590   3              }
+ 591   2      
+ 592   2              case 17 :
+ 593   2              {
+ 594   3                  operation5();
+ 595   3                  break;
+ 596   3              }
+ 597   2      
+ 598   2              case 18 :
+ 599   2              {
+ 600   3                  if (error == 0)
+ 601   3                  {
+ 602   4                      operation6();
+ 603   4                  }
+ 604   3                  break;
+ 605   3              }
+ 606   2      
+ 607   2              case 19 :
+ 608   2              {
+ 609   3                  if (error == 0)
+ 610   3                  {
+ 611   4                      operation7();
+ 612   4                  }
+C51 COMPILER V9.59.0.0   UC_CALC_DBOARD                                                    11/22/2024 19:16:17 PAGE 11  
+
+ 613   3                  break;
+ 614   3              }
+ 615   2      
+ 616   2              case 20 :
+ 617   2              {
+ 618   3                  if (error == 0)
+ 619   3                  {
+ 620   4                      operation8();
+ 621   4                  }
+ 622   3                  break;
+ 623   3              }
+ 624   2          }
+ 625   1      }
+ 626          
+ 627          void main(void)
+ 628          {
+ 629   1          InitLcd();
+ 630   1          DelayMs(15);
+ 631   1          refresh();
+ 632   1          while (1)
+ 633   1          {
+ 634   2              key(scan());
+ 635   2          }
+ 636   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2685    ----
+   CONSTANT SIZE    =     12    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     48      17
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
