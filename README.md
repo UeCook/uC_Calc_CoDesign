@@ -1,8 +1,8 @@
 # uC_Calc_单片机简易计算器课设
 
 ## 版权声明
-采用 (CC BY-NC-SA 4.0) 版权发布
-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+- 采用 (CC BY-NC-SA 4.0) 版权发布
+- NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
 
 ## 简介
 
