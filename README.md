@@ -4,8 +4,6 @@
 - 采用 (CC BY-NC-SA 4.0) 发布
 - NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
 
-## 严正声明
-
 本人无“重庆开源共创”旗下的 GitCode 平台账号，从未主动且从未授权第三方在 GitCode 平台上创建存储库。严禁 GitCode 等代码托管平台在未经作者本人书面许可的情况下私自搬运本仓库以及与之关联的所有分支项目，否则作者将追究法律责任。
 
 uC_Calc_CoDesign 代码托管平台仅为 GitHub。
