@@ -1,5 +1,14 @@
 # uC_Calc_单片机简易计算器课设
 
+ [![GitHub issues][issues-image]][issues-url]
+ [![Github Pulls][pulls-image]][pulls-url]
+ [![GitHub stars][stars-image]][stars-url]
+ [![GitHub forks][forks-image]][forks-url]
+ [![Github Downloads][download-image]][download-url]
+ [![license][license-image]][license-url]
+ ![repo-size][repo-size-image]
+ <!--[![hits][hits-image]][hits-url1]-->
+
 ## 版权声明
 - 采用 (CC BY-NC-SA 4.0) 发布
 - NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
