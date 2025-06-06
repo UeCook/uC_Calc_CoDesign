@@ -1,14 +1,5 @@
 # uC_Calc_单片机简易计算器课设
 
- [![GitHub issues][issues-image]][issues-url]
- [![Github Pulls][pulls-image]][pulls-url]
- [![GitHub stars][stars-image]][stars-url]
- [![GitHub forks][forks-image]][forks-url]
- [![Github Downloads][download-image]][download-url]
- [![license][license-image]][license-url]
- ![repo-size][repo-size-image]
- <!--[![hits][hits-image]][hits-url1]-->
-
 ## 版权声明
 - 采用 (CC BY-NC-SA 4.0) 发布
 - NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
@@ -16,6 +7,8 @@
 本人无“重庆开源共创”旗下的 GitCode 平台账号，从未主动且从未授权第三方在 GitCode 平台上创建存储库。严禁 GitCode 等代码托管平台在未经作者本人书面许可的情况下私自搬运本仓库以及与之关联的所有分支项目，否则作者将追究法律责任。
 
 uC_Calc_CoDesign 代码托管平台仅为 GitHub。
+
+本项目从未发布至 GitCode，如您发现请截图并保留证据
 
 ## 简介
 
